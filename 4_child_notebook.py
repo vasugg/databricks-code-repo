@@ -16,3 +16,18 @@ print("param passed from the parent nb - ",paramvalue)
 # COMMAND ----------
 
 dbutils.notebook.exit(0)
+
+# COMMAND ----------
+
+from pyspark.sql.session import SparkSession
+spark = SparkSession.builder.appName("Spark DataFrames").getOrCreate()
+
+# COMMAND ----------
+
+df1 = spark.read.csv("/Volumes/firstcatalog/default/usage_metrics/mobile_os_usage.csv", header=True)
+df1.createOrReplaceTempView("df1")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from df1
