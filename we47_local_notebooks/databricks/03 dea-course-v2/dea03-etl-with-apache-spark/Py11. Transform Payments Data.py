@@ -19,18 +19,20 @@ display(df)
 
 # COMMAND ----------
 
-df_extrac
+from pyspark.sql import functions as F
 
-# COMMAND ----------
+df_extract_payments = (
+                        df.
+                        select('order_id', 
+                               'payment_id',
+                               F.date_format('payment_timestamp', 'yyyy-MM-dd').cast('date').alias('payment_date'),
+                               F.date_format('payment_timestamp', 'HH-mm-ss').alias('payment_time'),
+                               'payment_status',
+                               'payment_method'
+                               )
+)
 
-# MAGIC %sql
-# MAGIC SELECT CAST(payment_id AS INT) AS payment_id,
-# MAGIC        CAST(order_id AS INT) AS order_id,
-# MAGIC        CAST(date_format(payment_timestamp,'yyyy-MM-dd') AS DATE) AS payment_date,
-# MAGIC        date_format(payment_timestamp,'HH:mm:ss') AS payment_time,
-# MAGIC        payment_status,
-# MAGIC        payment_method
-# MAGIC   FROM gizmobox.bronze.payments;
+display(df_extract_payments)
 
 # COMMAND ----------
 
@@ -40,19 +42,23 @@ df_extrac
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT CAST(payment_id AS INT) AS payment_id,
-# MAGIC        CAST(order_id AS INT) AS order_id,
-# MAGIC        CAST(date_format(payment_timestamp,'yyyy-MM-dd') AS DATE) AS payment_date,
-# MAGIC        date_format(payment_timestamp,'HH:mm:ss') AS payment_time,
-# MAGIC        CASE payment_status
-# MAGIC          WHEN 1 THEN 'Success'
-# MAGIC          WHEN 2 THEN 'Pending'
-# MAGIC          WHEN 3 THEN 'Cancelled'
-# MAGIC          WHEN 4 THEN 'Failed'
-# MAGIC        END AS payment_status,  
-# MAGIC        payment_method
-# MAGIC   FROM gizmobox.bronze.payments;
+df_mapped_payments = (
+                        df_extract_payments.
+                        select(
+                               'order_id', 
+                               'payment_id',
+                               'payment_date',
+                               'payment_time',
+                               F.when(df_extract_payments.payment_status == 1, 'Success')
+                                .when(df_extract_payments.payment_status == 2, 'Pending')
+                                .when(df_extract_payments.payment_status == 3, 'Cancelled')
+                                .when(df_extract_payments.payment_status == 4, 'Failed')
+                                .alias('payment_status'),
+                               'payment_method'
+                               )
+)
+
+display(df_mapped_payments)
 
 # COMMAND ----------
 
@@ -61,23 +67,9 @@ df_extrac
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE TABLE gizmobox.silver.payments
-# MAGIC AS
-# MAGIC SELECT CAST(payment_id AS INT) AS payment_id,
-# MAGIC        CAST(order_id AS INT) AS order_id,
-# MAGIC        CAST(date_format(payment_timestamp,'yyyy-MM-dd') AS DATE) AS payment_date,
-# MAGIC        date_format(payment_timestamp,'HH:mm:ss') AS payment_time,
-# MAGIC        CASE payment_status
-# MAGIC          WHEN 1 THEN 'Success'
-# MAGIC          WHEN 2 THEN 'Pending'
-# MAGIC          WHEN 3 THEN 'Cancelled'
-# MAGIC          WHEN 4 THEN 'Failed'
-# MAGIC        END AS payment_status,  
-# MAGIC        payment_method
-# MAGIC   FROM gizmobox.bronze.payments;
+df_mapped_payments.writeTo('gizmobox.silver.py_payments').createOrReplace()
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM gizmobox.silver.payments;
+# MAGIC SELECT * FROM gizmobox.silver.py_payments;
