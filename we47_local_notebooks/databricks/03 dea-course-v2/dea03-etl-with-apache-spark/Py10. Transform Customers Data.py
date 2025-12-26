@@ -51,7 +51,12 @@ display(df_distinct)
 
 # COMMAND ----------
 
+#dropDuplicates is more versatile than distinct() as it can be used to pick distinct values from specific columns as well. When no argument is passed to dropDuplicates(), it performs the same task as distinct(), checking the entire row. However, you can also specify a subset of columns to consider when looking for duplicates.
+
 df_distinct = df_filtered.dropDuplicates()
+
+#dropDuplicates(subset)
+#df_distinct = df_filtered.dropDuplicates(['customer_id'])
 display(df_distinct)
 
 # COMMAND ----------

@@ -12,7 +12,7 @@
 
 # COMMAND ----------
 
-df = spark.read.json("/Volumes/gizmobox/landing/operational_data/orders")
+df = spark.read.json("/Volumes/gizmobox/landing/operational_data/orders", allowSingleQuotes=True, allowUnquotedFieldNames=True)
 display(df)
 
 # COMMAND ----------
